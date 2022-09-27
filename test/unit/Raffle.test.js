@@ -1,5 +1,5 @@
 const { assert, expect } = require("chai");
-const { getNamedAccounts, deployments, ethers } = require("hardhat");
+const { getNamedAccounts, deployments, ethers, network } = require("hardhat");
 const {
   developmentChains,
   networkConfig,
@@ -20,12 +20,12 @@ const {
           deployer
         );
         raffleEntranceFee = await raffle.getEntranceFee();
+        interval = await raffle.getInterval();
       });
       describe("constructor", function() {
         it("initializes the raffle correctly", async function() {
           const raffleState = await raffle.getRaffleState();
           assert.equal(raffleState.toString(), "0");
-          interval = await raffle.getInterval();
           assert.equal(interval.toString(), networkConfig[chainId]["interval"]);
         });
       });
@@ -45,6 +45,13 @@ const {
         });
         it("doesn't allow entrance when raffle is calculating", async function() {
           await raffle.enterRaffle({ value: raffleEntranceFee });
+          await network.provider.send("evm_increaseTime", [
+            interval.toNumber() + 1,
+          ]);
+          await network.provider.send("evm_mine", []);
+          await raffle.performUpkeep([]);
+          await expect(raffle.enterRaffle({ value: raffleEntranceFee })).to.be
+            .revertedWithCustomError;
         });
       });
     });
