@@ -7,11 +7,11 @@ const {
 
 !developmentChains.includes(network.name)
   ? describe.skip
-  : describe("Raffle", async function() {
+  : describe("Raffle", async function () {
       let raffle, vrfCoordinatorV2Mock, interval, raffleEntranceFee, deployer;
       const chainId = network.config.chainId;
 
-      beforeEach(async function() {
+      beforeEach(async function () {
         deployer = (await getNamedAccounts()).deployer;
         await deployments.fixture(["all"]);
         raffle = await ethers.getContract("Raffle", deployer);
@@ -22,28 +22,28 @@ const {
         raffleEntranceFee = await raffle.getEntranceFee();
         interval = await raffle.getInterval();
       });
-      describe("constructor", function() {
-        it("initializes the raffle correctly", async function() {
+      describe("constructor", function () {
+        it("initializes the raffle correctly", async function () {
           const raffleState = await raffle.getRaffleState();
           assert.equal(raffleState.toString(), "0");
           assert.equal(interval.toString(), networkConfig[chainId]["interval"]);
         });
       });
-      describe("enterRaffle", function() {
-        it("reverts when you don't pay enough", async function() {
+      describe("enterRaffle", function () {
+        it("reverts when you don't pay enough", async function () {
           await expect(raffle.enterRaffle()).to.be.revertedWithCustomError;
         });
-        it("records players when they enter", async function() {
+        it("records players when they enter", async function () {
           await raffle.enterRaffle({ value: raffleEntranceFee });
           const playerFromContract = await raffle.getPlayer(0);
           assert.equal(playerFromContract, deployer);
         });
-        it("emits event on enter", async function() {
+        it("emits event on enter", async function () {
           await expect(
             raffle.enterRaffle({ value: raffleEntranceFee })
           ).to.emit(raffle, "RaffleEnter");
         });
-        it("doesn't allow entrance when raffle is calculating", async function() {
+        it("doesn't allow entrance when raffle is calculating", async function () {
           await raffle.enterRaffle({ value: raffleEntranceFee });
           await network.provider.send("evm_increaseTime", [
             interval.toNumber() + 1,
@@ -54,8 +54,8 @@ const {
             .revertedWithCustomError;
         });
       });
-      describe("checkUpKeep", function() {
-        it("returns false if people haven't sent any ETH", async function() {
+      describe("checkUpKeep", function () {
+        it("returns false if people haven't sent any ETH", async function () {
           await network.provider.send("evm_increaseTime", [
             interval.toNumber() + 1,
           ]);
@@ -63,7 +63,7 @@ const {
           const { upkeepNeeded } = await raffle.callStatic.checkUpkeep([]);
           assert(!upkeepNeeded);
         });
-        it("returns false is raffle isn't open", async function() {
+        it("returns false is raffle isn't open", async function () {
           await raffle.enterRaffle({ value: raffleEntranceFee });
           await network.provider.send("evm_increaseTime", [
             interval.toNumber() + 1,
@@ -94,8 +94,8 @@ const {
         });
       });
 
-      describe("performUpkeep", function() {
-        it("can only run if checkupkeep is true", async function() {
+      describe("performUpkeep", function () {
+        it("can only run if checkupkeep is true", async function () {
           await raffle.enterRaffle({ value: raffleEntranceFee });
           await network.provider.send("evm_increaseTime", [
             interval.toNumber() + 1,
@@ -104,10 +104,10 @@ const {
           const tx = await raffle.performUpkeep([]);
           assert(tx);
         });
-        it("reverts when checkupkeep is false", async function() {
+        it("reverts when checkupkeep is false", async function () {
           await expect(raffle.performUpkeep([])).to.be.revertedWithCustomError;
         });
-        it("updates the raffle state, emits an event, and called the vrf coordinator", async function() {
+        it("updates the raffle state, emits an event, and called the vrf coordinator", async function () {
           await raffle.enterRaffle({ value: raffleEntranceFee });
           await network.provider.send("evm_increaseTime", [
             interval.toNumber() + 1,
@@ -119,15 +119,15 @@ const {
           assert(raffleState.toString(), "1");
         });
       });
-      describe("fulfillRandomWords", function() {
-        beforeEach(async function() {
+      describe("fulfillRandomWords", function () {
+        beforeEach(async function () {
           await raffle.enterRaffle({ value: raffleEntranceFee });
           await network.provider.send("evm_increaseTime", [
             interval.toNumber() + 1,
           ]);
           await network.provider.request({ method: "evm_mine", params: [] });
         });
-        it("can only be called after performUpKeep", async function() {
+        it("can only be called after performUpKeep", async function () {
           await expect(
             vrfCoordinatorV2Mock.fulfillRandomWords(0, raffle.address)
           ).to.be.revertedWithCustomError;
@@ -135,14 +135,17 @@ const {
             vrfCoordinatorV2Mock.fulfillRandomWords(1, raffle.address)
           ).to.be.revertedWithCustomError;
         });
-        it("picks a winner, resets the lottery, and sends money", async function() {
+        it("picks a winner, resets the lottery, and sends money", async function () {
           const additionalEntrants = 3;
           const startingAccountIndex = 1;
+          const accounts = await ethers.getSigners();
           for (
             let i = startingAccountIndex;
             i < startingAccountIndex + additionalEntrants;
             i++
-          ) {}
+          ) {
+            const accountConnecetedRaffle = raffle.connect(accounts[i]);
+          }
         });
       });
     });
