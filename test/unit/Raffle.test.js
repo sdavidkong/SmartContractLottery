@@ -145,7 +145,39 @@ const {
             i++
           ) {
             const accountConnecetedRaffle = raffle.connect(accounts[i]);
+            await accountConnecetedRaffle.enterRaffle({
+              value: raffleEntranceFee,
+            });
           }
+          const startingTimeStamp = await raffle.getLatestTimeStamp();
+          await new Promise(async (resolve, reject) => {
+            raffle.once("WinnerPicked", async () => {
+              console.log("Found the event!");
+              try {
+                console.log(recentWinner);
+                console.log(accounts[2]);
+                console.log(accounts[0]);
+                console.log(accounts[1]);
+                console.log(accounts[3]);
+                const recentWinner = await raffle.getRecentWinner();
+                const raffleState = await raffle.getRaffleState();
+                const endingTimeStamp = await raffle.getLatestTimeStamp();
+                const numPlayers = await raffle.getNumberOfPlayers();
+                assert.equal(numPlayers.toString(), "0");
+                asssert.equal(raffleState.toString(), "0");
+                assert(endingTimeStamp.startingTimeStamp);
+              } catch (e) {
+                reject(e);
+              }
+              resolve();
+            });
+            const tx = await raffle.performUpkeep([]);
+            const txReceipt = await tx.wait(1);
+            await vrfCoordinatorV2Mock.fulfillRandomWords(
+              txReceipt.events[1].args.requestId,
+              raffle.address
+            );
+          });
         });
       });
     });
