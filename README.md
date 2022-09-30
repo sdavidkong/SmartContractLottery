@@ -11,3 +11,5 @@ REPORT_GAS=true npx hardhat test
 npx hardhat node
 npx hardhat run scripts/deploy.js
 ```
+
+goerli raffle deployed at 0x9fDfbf3C5F12dE43Ef118b9769516e82c1FA5E2d

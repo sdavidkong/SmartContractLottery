@@ -8,7 +8,7 @@ const { verify } = require("../utils/verify");
 
 const VRF_SUB_FUND_AMOUNT = ethers.utils.parseEther("3");
 
-module.exports = async function({ getNamedAccounts, deployments }) {
+module.exports = async function ({ getNamedAccounts, deployments }) {
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
   const chainId = network.config.chainId;
@@ -46,13 +46,6 @@ module.exports = async function({ getNamedAccounts, deployments }) {
     waitConfirmations: VERIFICATION_BLOCK_CONFIRMATIONS || 1,
   });
 
-  if (
-    !developmentChains.includes(network.name) &&
-    process.env.ETHERSCAN_API_KEY
-  ) {
-    log("Verifying...");
-    await verify(raffle.address, args);
-  }
   log(
     "-----------------------------------------------------------------------------"
   );
