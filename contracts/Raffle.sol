@@ -41,7 +41,7 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
     uint256 private immutable i_interval;
 
     event RaffleEnter(address indexed player);
-    event RequestedRaffleWinner(uint256 indexed requestID);
+    event RequestedRaffleWinner(uint256 indexed requestId);
     event WinnerPicked(address indexed winner);
 
     constructor(

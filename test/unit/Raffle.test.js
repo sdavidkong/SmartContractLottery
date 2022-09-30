@@ -119,6 +119,7 @@ const {
           assert(raffleState.toString(), "1");
         });
       });
+
       describe("fulfillRandomWords", function () {
         beforeEach(async function () {
           await raffle.enterRaffle({ value: raffleEntranceFee });
@@ -137,15 +138,15 @@ const {
         });
         it("picks a winner, resets the lottery, and sends money", async function () {
           const additionalEntrants = 3;
-          const startingAccountIndex = 1;
+          const startingAccountIndex = 2;
           const accounts = await ethers.getSigners();
           for (
             let i = startingAccountIndex;
             i < startingAccountIndex + additionalEntrants;
             i++
           ) {
-            const accountConnecetedRaffle = raffle.connect(accounts[i]);
-            await accountConnecetedRaffle.enterRaffle({
+            raffle = raffle.connect(accounts[i]);
+            await raffle.enterRaffle({
               value: raffleEntranceFee,
             });
           }
@@ -154,25 +155,32 @@ const {
             raffle.once("WinnerPicked", async () => {
               console.log("Found the event!");
               try {
-                console.log(recentWinner);
-                console.log(accounts[2]);
-                console.log(accounts[0]);
-                console.log(accounts[1]);
-                console.log(accounts[3]);
                 const recentWinner = await raffle.getRecentWinner();
                 const raffleState = await raffle.getRaffleState();
+                const winnerBalance = await accounts[2].getBalance();
                 const endingTimeStamp = await raffle.getLatestTimeStamp();
-                const numPlayers = await raffle.getNumberOfPlayers();
-                assert.equal(numPlayers.toString(), "0");
-                asssert.equal(raffleState.toString(), "0");
-                assert(endingTimeStamp.startingTimeStamp);
+                console.log(recentWinner);
+
+                assert.equal(recentWinner.toString(), accounts[2].address);
+                assert.equal(raffleState, 0);
+                assert.equal(
+                  winnerBalance.toString(),
+                  startingBalance.add(
+                    raffleEntranceFee
+                      .mul(additionalEntrants)
+                      .add(raffleEntranceFee)
+                      .toString()
+                  )
+                );
+                assert(endingTimeStamp > startingTimeStamp);
+                resolve();
               } catch (e) {
                 reject(e);
               }
-              resolve();
             });
-            const tx = await raffle.performUpkeep([]);
+            const tx = await raffle.performUpkeep("0x");
             const txReceipt = await tx.wait(1);
+            const startingBalance = await accounts[2].getBalance();
             await vrfCoordinatorV2Mock.fulfillRandomWords(
               txReceipt.events[1].args.requestId,
               raffle.address
