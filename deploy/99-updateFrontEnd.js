@@ -1,8 +1,8 @@
 const { ethers, network } = require("hardhat");
 const fs = require("fs");
 const FRONT_END_ADDRESSES_FILE =
-  "../lotto-time-front-end/constants/contractAddress.json";
-const FRONT_END_ABI_FILE = "../lotto-time-front-end/constants/abi.json";
+  "../lotto-time-next-js/constants/contractAddress.json";
+const FRONT_END_ABI_FILE = "../lotto-time-next-js/constants/abi.json";
 
 module.exports = async function () {
   if (process.env.UPDATE_FRONT_END) {
